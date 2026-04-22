@@ -1,0 +1,43 @@
+name: Naukri Profile Boost
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs every hour
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
+
+jobs:
+  update-profile:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Recommended stable version
+          
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium
+        
+      - name: Reconstruct Auth State
+        env:
+          SECRET_AUTH_STATE: ${{ secrets.SECRET_AUTH_STATE }}
+        run: |
+          mkdir -p data
+          echo "$SECRET_AUTH_STATE" > data/auth_state.json
+          
+      - name: Run Playwright Tests
+        run: npm run test
+        
+      - name: Upload Playwright Report on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
