@@ -170,12 +170,16 @@ class NaukriPage {
     await this.page.waitForTimeout(5000);
     await randomDelay();
     
-    // Repaint Trigger to unlock frozen UI elements
-    await this.page.evaluate(() => window.scrollTo(0, 500));
-    await this.page.evaluate(() => window.scrollTo(0, 0));
+    // Force Navigation Reset to completely destroy lingering React states
+    console.log('Clean Slate: Reloading profile to destroy ghost modals...');
+    await this.page.goto(this.profileUrl, { waitUntil: 'domcontentloaded' });
+    
+    // Re-Guard CSS
+    await this.page.addStyleTag({ content: '.success-message-container, .toast, .trans-layer { display: none !important; }' }).catch(() => {});
     
     // Confirm Icon Visibility with fresh locator timeout before clicking edit again
     await this.editHeadlineIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await this.editHeadlineIcon.first().scrollIntoViewIfNeeded();
     await this.editHeadlineIcon.first().click({ force: true });
     
     // Retry Click Logic for second edit
