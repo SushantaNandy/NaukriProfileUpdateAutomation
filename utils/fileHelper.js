@@ -18,13 +18,26 @@ function getFreshResumePath(dataDirPath) {
   const currentResumePath = path.join(dataDirPath, existingResume);
   const ext = '.pdf';
   
-  // Create a fresh name based on current date and time e.g. SDETSushantaResume_23_04_14_30_45.pdf
+  // Create a fresh name based on current IST date and time e.g. SDETSushantaResume_23_04_14_30_45.pdf
   const date = new Date();
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const formatter = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(date);
+  const getPart = (type) => parts.find(p => p.type === type).value;
+  
+  const day = getPart('day');
+  const month = getPart('month');
+  const hours = getPart('hour');
+  const minutes = getPart('minute');
+  const seconds = getPart('second');
   
   const baseName = 'SDETSushantaResume';
   const newName = `${baseName}_${day}_${month}_${hours}_${minutes}_${seconds}${ext}`;
