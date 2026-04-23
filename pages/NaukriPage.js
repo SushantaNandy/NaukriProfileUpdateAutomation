@@ -31,10 +31,24 @@ class NaukriPage {
 
   async gotoProfile() {
     await this.page.goto(this.profileUrl);
-    await this.resumeHeadlineSection.waitFor({ state: 'visible' });
+    
+    // Diagnostic logging for CI
+    console.log('Current URL in CI:', this.page.url());
+    
+    // Auth Guard
+    if (this.page.url().includes('login.naukri.com')) {
+      throw new Error('CRITICAL: Session expired or redirected to login in GitHub Actions. Please refresh local auth_state.json and update the GitHub Secret.');
+    }
+    
+    // Fast Failure wait
+    await this.resumeHeadlineSection.waitFor({ state: 'visible', timeout: 15000 });
     
     // Inject CSS to forcefully hide non-modal overlays (toasts, success messages)
-    await this.page.addStyleTag({ content: '.success-message-container, .toast, .trans-layer { display: none !important; }' });
+    try {
+      await this.page.addStyleTag({ content: '.success-message-container, .toast, .trans-layer { display: none !important; }' });
+    } catch (e) {
+      console.log('Warning: Failed to inject CSS guard:', e.message);
+    }
     
     await randomDelay();
   }
