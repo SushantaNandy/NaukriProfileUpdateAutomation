@@ -163,16 +163,19 @@ class NaukriPage {
     await this.page.waitForTimeout(1000);
     await this.handlePopups();
     
-    // Wait for modal closure and stabilization
-    await this.page.locator('.ltLayer.open').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
-    await this.page.waitForTimeout(2000);
+    // Wait for strict modal detachment and stabilization
+    await this.page.locator('.ltLayer').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+    
+    // Cooldown period for React state to settle
+    await this.page.waitForTimeout(5000);
     await randomDelay();
     
-    // Wait for save to complete and let the success state settle
-    await this.page.waitForTimeout(1000);
+    // Repaint Trigger to unlock frozen UI elements
+    await this.page.evaluate(() => window.scrollTo(0, 500));
+    await this.page.evaluate(() => window.scrollTo(0, 0));
     
-    // Confirm Icon Visibility before clicking edit again
-    await this.editHeadlineIcon.first().waitFor({ state: 'visible' });
+    // Confirm Icon Visibility with fresh locator timeout before clicking edit again
+    await this.editHeadlineIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await this.editHeadlineIcon.first().click({ force: true });
     
     // Retry Click Logic for second edit
