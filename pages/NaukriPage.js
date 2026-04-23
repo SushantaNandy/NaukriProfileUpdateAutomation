@@ -40,8 +40,9 @@ class NaukriPage {
     
     await this.page.goto(this.profileUrl);
     
-    // Stealth Wait to allow security scripts to finish evaluating
-    await this.page.waitForLoadState('networkidle');
+    // Stealth Wait to allow security scripts to finish evaluating without hanging on persistent connections
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(3000);
     
     // Diagnostic logging for CI
     console.log('Current URL in CI:', this.page.url());
@@ -130,7 +131,7 @@ class NaukriPage {
     await randomDelay();
     await this.editHeadlineIcon.first().click({ force: true });
     
-    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 5000 });
+    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 15000 });
     await this.headlineTextArea.focus();
     await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
     
@@ -144,15 +145,20 @@ class NaukriPage {
     await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
     await this.page.waitForTimeout(1000);
     await this.handlePopups();
+    
+    // Wait for modal closure and stabilization
+    await this.page.locator('.ltLayer.open').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+    await this.page.waitForTimeout(2000);
     await randomDelay();
     
     // Wait for save to complete and let the success state settle
     await this.page.waitForTimeout(1000);
     
-    // Click edit again
+    // Confirm Icon Visibility before clicking edit again
+    await this.editHeadlineIcon.first().waitFor({ state: 'visible' });
     await this.editHeadlineIcon.first().click({ force: true });
     
-    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 5000 });
+    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 15000 });
     await this.headlineTextArea.focus();
     await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
     
