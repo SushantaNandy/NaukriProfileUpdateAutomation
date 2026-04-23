@@ -129,9 +129,26 @@ class NaukriPage {
   async updateHeadline() {
     await this.handlePopups();
     await randomDelay();
+    
+    // Strict Cleanup wait
+    await this.page.locator('.trans-layer, .nI-gNb-header__wrapper').first().waitFor({ state: 'visible' }).catch(() => {});
+    
+    // Actionable Check
+    await this.editHeadlineIcon.first().waitFor({ state: 'visible' });
     await this.editHeadlineIcon.first().click({ force: true });
     
-    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 15000 });
+    // Retry Click Logic
+    try {
+      await this.headlineTextArea.waitFor({ state: 'visible', timeout: 5000 });
+    } catch (e) {
+      console.log('Retry: Headline modal not appearing, clicking edit icon again...');
+      await this.page.waitForTimeout(2000);
+      await this.editHeadlineIcon.first().click({ force: true });
+    }
+    
+    // Increased Wait
+    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 20000 });
+    
     await this.headlineTextArea.focus();
     await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
     
@@ -158,7 +175,18 @@ class NaukriPage {
     await this.editHeadlineIcon.first().waitFor({ state: 'visible' });
     await this.editHeadlineIcon.first().click({ force: true });
     
-    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 15000 });
+    // Retry Click Logic for second edit
+    try {
+      await this.headlineTextArea.waitFor({ state: 'visible', timeout: 5000 });
+    } catch (e) {
+      console.log('Retry: Headline modal not appearing on second edit, clicking edit icon again...');
+      await this.page.waitForTimeout(2000);
+      await this.editHeadlineIcon.first().click({ force: true });
+    }
+    
+    // Increased Wait
+    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 20000 });
+    
     await this.headlineTextArea.focus();
     await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
     
