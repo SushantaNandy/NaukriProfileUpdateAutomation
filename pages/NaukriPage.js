@@ -32,16 +32,27 @@ class NaukriPage {
   async gotoProfile() {
     await this.page.goto(this.profileUrl);
     
+    // Stealth Wait to allow security scripts to finish evaluating
+    await this.page.waitForLoadState('networkidle');
+    
     // Diagnostic logging for CI
     console.log('Current URL in CI:', this.page.url());
+    console.log('Page Title in CI:', await this.page.title());
     
     // Auth Guard
     if (this.page.url().includes('login.naukri.com')) {
       throw new Error('CRITICAL: Session expired or redirected to login in GitHub Actions. Please refresh local auth_state.json and update the GitHub Secret.');
     }
     
-    // Fast Failure wait
-    await this.resumeHeadlineSection.waitFor({ state: 'visible', timeout: 15000 });
+    // Fast Failure wait - increased for slow CI runners
+    try {
+      await this.resumeHeadlineSection.waitFor({ state: 'visible', timeout: 30000 });
+    } catch (e) {
+      console.log('CRITICAL: Failed to load profile. Snapshotting content...');
+      const bodyText = await this.page.locator('body').innerText();
+      console.log('Body snippet:', bodyText.substring(0, 200));
+      throw e;
+    }
     
     // Inject CSS to forcefully hide non-modal overlays (toasts, success messages)
     try {
