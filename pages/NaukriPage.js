@@ -30,6 +30,14 @@ class NaukriPage {
   }
 
   async gotoProfile() {
+    await this.page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'
+    });
+    
+    // Increase randomDelay before navigation to 5-10 seconds to avoid burst detection
+    console.log('Stealth: Waiting 5-10 seconds before navigating...');
+    await this.page.waitForTimeout(Math.floor(Math.random() * 5000) + 5000);
+    
     await this.page.goto(this.profileUrl);
     
     // Stealth Wait to allow security scripts to finish evaluating

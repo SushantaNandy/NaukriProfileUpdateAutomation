@@ -1,7 +1,24 @@
-const { test, expect } = require('@playwright/test');
+const { test: base, expect } = require('@playwright/test');
 const path = require('path');
 const NaukriPage = require('../pages/NaukriPage');
 const { getFreshResumePath } = require('../utils/fileHelper');
+const { chromium } = require('../utils/stealth');
+
+// Override the default page fixture to use playwright-extra stealth
+const test = base.extend({
+  page: async ({}, use) => {
+    const browser = await chromium.launch({ headless: process.env.HEADLESS !== 'false' });
+    const context = await browser.newContext({
+      storageState: 'data/auth_state.json',
+      viewport: { width: 1366, height: 768 },
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      locale: 'en-IN'
+    });
+    const page = await context.newPage();
+    await use(page);
+    await browser.close();
+  }
+});
 
 test.describe('Naukri Profile Update Automation', () => {
   
