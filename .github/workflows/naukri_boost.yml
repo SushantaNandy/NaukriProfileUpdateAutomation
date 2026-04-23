@@ -2,7 +2,7 @@ name: Naukri Profile Boost
 
 on:
   schedule:
-    - cron: '0 * * * *' # Runs every hour
+    - cron: '30 3-9 * * *' # Runs every hour between 9:00 AM and 3:00 PM IST
   workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
 
 jobs:
@@ -32,6 +32,8 @@ jobs:
           echo "$SECRET_AUTH_STATE" > data/auth_state.json
           
       - name: Run Playwright Tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: npm run test
         
       - name: Upload Playwright Report on Failure
