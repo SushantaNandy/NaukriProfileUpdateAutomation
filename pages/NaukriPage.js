@@ -49,8 +49,9 @@ class NaukriPage {
       await this.resumeHeadlineSection.waitFor({ state: 'visible', timeout: 30000 });
     } catch (e) {
       console.log('CRITICAL: Failed to load profile. Snapshotting content...');
-      const bodyText = await this.page.locator('body').innerText();
-      console.log('Body snippet:', bodyText.substring(0, 200));
+      console.log('Page Title in CI:', await this.page.title());
+      const bodyText = await this.page.content();
+      console.log('Body snippet:', bodyText.substring(0, 500));
       throw e;
     }
     
