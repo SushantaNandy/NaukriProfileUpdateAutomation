@@ -1,7 +1,8 @@
 const { test: base, expect } = require('@playwright/test');
 const path = require('path');
 const NaukriPage = require('../pages/NaukriPage');
-const { getFreshResumePath } = require('../utils/fileHelper');
+const { createStampedResume, deleteStampedResume } = require('../utils/fileHelper');
+const { generateHeadline } = require('../utils/headline-gen');
 const { chromium } = require('../utils/stealth');
 
 // Override the default page fixture to use playwright-extra stealth
@@ -23,31 +24,56 @@ const test = base.extend({
 test.describe('Naukri Profile Update Automation', () => {
   
   test('should update resume and headline', async ({ page }) => {
-    const naukriPage = new NaukriPage(page);
+    // Determine User Role
+    const role = process.env.USER_ROLE || 'Software Professional';
+    const proofPoints = process.env.USER_PROOF_POINTS || '';
     
-    // 1. Navigate directly to Profile Page
-    console.log('Navigating to profile page...');
-    await naukriPage.gotoProfile();
+    console.log('Generating AI Headline...');
+    const aiHeadline = await generateHeadline(role, proofPoints);
+    console.log(`AI Headline generated: ${aiHeadline}`);
+
+    // Create Stamped Resume
+    const resumePath = process.env.NAUKRI_RESUME_PATH;
+    if (!resumePath) {
+        throw new Error('NAUKRI_RESUME_PATH is not defined');
+    }
     
-    // 2. Resume Update
-    console.log('Preparing fresh resume...');
-    const dataDirPath = path.join(__dirname, '../data');
-    const freshResumePath = getFreshResumePath(dataDirPath);
-    console.log(`Using fresh resume: ${path.basename(freshResumePath)}`);
+    console.log('Creating Stamped Resume Copy...');
+    let stampedResumePath = null;
+    let uploadSuccessful = false;
     
-    console.log('Uploading new resume...');
-    await naukriPage.updateResume(freshResumePath);
-    
-    // 3. Headline Update
-    console.log('Updating resume headline...');
-    await naukriPage.updateHeadline();
-    
-    // 4. Verify Update
-    console.log('Verifying update...');
-    const lastUpdated = await naukriPage.verifyUpdate();
-    console.log(`Success! Profile timestamp: ${lastUpdated}`);
-    
-    expect(lastUpdated).toBeTruthy();
+    try {
+        stampedResumePath = createStampedResume(resumePath);
+        console.log(`Stamped resume created: ${path.basename(stampedResumePath)}`);
+        
+        const naukriPage = new NaukriPage(page);
+        
+        // 1. Navigate directly to Profile Page
+        console.log('Navigating to profile page...');
+        await naukriPage.gotoProfile();
+        
+        // 2. Headline Update
+        console.log(`Updating resume headline to: ${aiHeadline}`);
+        await naukriPage.updateHeadline(aiHeadline);
+
+        // 3. Resume Update
+        console.log('Uploading new resume...');
+        await naukriPage.updateResume(stampedResumePath);
+        
+        // 4. Verify Update
+        console.log('Verifying update...');
+        const lastUpdated = await naukriPage.verifyUpdate();
+        console.log(`Success! Profile timestamp: ${lastUpdated}`);
+        
+        expect(lastUpdated).toBeTruthy();
+        uploadSuccessful = true;
+    } finally {
+        if (stampedResumePath && uploadSuccessful) {
+            deleteStampedResume(stampedResumePath);
+        } else if (stampedResumePath) {
+            console.log(`Skipping cleanup of ${path.basename(stampedResumePath)} due to failure.`);
+        }
+    }
   });
   
 });

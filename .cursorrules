@@ -1,0 +1,30 @@
+# Project: Naukri & LinkedIn Automation (Career OS)
+# Identity: Multi-tenant, Agentic Automation Platform
+
+## Project State
+- Branch: feat/multi-user-support
+- Framework: Playwright (JavaScript)
+- Architecture: Page Object Model + Agentic Skills
+
+## Key Entities & Workflows
+- **Sushanta (Admin)**: Google SSO login flow.
+- **Janvi (Marketing Analyst)**: Credential-based login flow (raijanv547@gmail.com).
+- **Resumes**: 
+  - Sushanta: ./data/SDETSushantaResume.pdf
+  - Janvi: ./data/Janvi_Rai_Marketing_Analyst_Resume.docx
+
+## Core Logic
+- GitHub Actions Matrix: Located in `.github/workflows/naukri_boost.yml`.
+- Multi-user Login: Handled in `pages/NaukriPage.js` via `loginBasedOnEnv()`.
+- Together AI Integration: Used for branded image generation (Flux.1-schnell).
+
+## Guidelines
+- Always use user-neutral environment variables (e.g., NAUKRI_EMAIL).
+- Never hardcode credentials; reference process.env.
+- Prioritize headless: false for local verification scripts.
+
+## Resume & Profile Update Workflow (Stealth)
+- **AI Headlines**: Use `@google/generative-ai` to generate dynamic, role-specific headlines via `utils/headline-gen.js`.
+- **Dynamic File Renaming**: Copy the target resume (e.g. `.docx` or `.pdf`) to a timestamped format `[OriginalName]_DD_MM_HH_mm_ss.[ext]` before uploading via `utils/fileHelper.js`.
+- **Cleanup**: Delete the stamped resume copy only after UI verification of successful upload.
+- **Stealth Strategy**: Maintain random delays, user-agent spoofing, and realistic viewport sizes throughout the Playwright session to bypass detection.

@@ -8,6 +8,14 @@ on:
 jobs:
   update-profile:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - user: SUSHANTA
+            resume_path: ./data/SDETSushantaResume.pdf
+          - user: JANVI
+            resume_path: ./data/Janvi_Rai_Marketing_Analyst_Resume.docx
     
     steps:
       - name: Checkout Repository
@@ -34,6 +42,9 @@ jobs:
       - name: Run Playwright Tests
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NAUKRI_EMAIL: ${{ secrets[format('{0}_EMAIL', matrix.user)] }}
+          NAUKRI_PASSWORD: ${{ secrets[format('{0}_PASSWORD', matrix.user)] }}
+          NAUKRI_RESUME_PATH: ${{ matrix.resume_path }}
         run: npm run test
         
       - name: Upload Playwright Report on Failure

@@ -27,6 +27,12 @@ class NaukriPage {
     
     // Popup Guard Locators
     this.proPopupCloseBtn = page.locator('div.ltLayer.open').getByRole('link', { name: /close|CrossLayer/i }).or(page.locator('.ltLayer.open .crossLayer')).filter({ visible: true }).first();
+
+    // Login Locators
+    this.usernameField = page.locator('#usernameField');
+    this.passwordField = page.locator('#passwordField');
+    this.loginSubmitBtn = page.locator('button[type="submit"], button.waves-effect.waves-light, button.btn-primary.loginButton');
+    this.googleLoginBtn = page.locator('.google-login, button:has-text("Google"), .google-text');
   }
 
   async gotoProfile() {
@@ -48,9 +54,16 @@ class NaukriPage {
     console.log('Current URL in CI:', this.page.url());
     console.log('Page Title in CI:', await this.page.title());
     
-    // Auth Guard
-    if (this.page.url().includes('login.naukri.com')) {
-      throw new Error('CRITICAL: Session expired or redirected to login in GitHub Actions. Please refresh local auth_state.json and update the GitHub Secret.');
+    // Auth Guard - Attempt Login if redirected
+    if (this.page.url().includes('login.naukri.com') || this.page.url().includes('nlogin/login')) {
+      console.log('Session expired or not logged in. Initiating login flow...');
+      await this.loginBasedOnEnv();
+      
+      // Navigate back to profile after successful login
+      console.log('Navigating back to profile after login...');
+      await this.page.goto(this.profileUrl);
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.page.waitForTimeout(3000);
     }
     
     // Fast Failure wait - increased for slow CI runners
@@ -72,6 +85,81 @@ class NaukriPage {
     }
     
     await randomDelay();
+  }
+
+  /**
+   * Toggles between Google Login and Credentials Login based on environment variables.
+   */
+  async loginBasedOnEnv() {
+    const email = process.env.NAUKRI_EMAIL;
+    const password = process.env.NAUKRI_PASSWORD;
+    
+    if (email && password) {
+      await this.loginWithCredentials(email, password);
+    } else if (email && !password) {
+      await this.loginWithGoogle();
+    } else {
+      console.log('No NAUKRI_EMAIL found in environment variables. Assuming already logged in or manual intervention required.');
+    }
+    
+    await this.verifyDashboardLoaded();
+  }
+
+  /**
+   * Logs in using email and password.
+   */
+  async loginWithCredentials(email, password) {
+    console.log(`Logging in with credentials for: ${email}`);
+    
+    if (!this.page.url().includes('nlogin/login')) {
+        await this.page.goto('https://www.naukri.com/nlogin/login');
+    }
+    
+    await this.usernameField.waitFor({ state: 'visible', timeout: 15000 });
+    await this.usernameField.fill(email);
+    
+    await this.page.waitForTimeout(1000);
+    await this.passwordField.fill(password);
+    
+    await this.page.waitForTimeout(1000);
+    await this.loginSubmitBtn.first().click({ force: true });
+    
+    console.log('Submitted credentials. Waiting for authentication...');
+  }
+
+  /**
+   * Logs in using Google (Placeholder for manual/stealth interaction if needed).
+   */
+  async loginWithGoogle() {
+    console.log('Initiating Google Login flow...');
+    
+    if (!this.page.url().includes('nlogin/login')) {
+        await this.page.goto('https://www.naukri.com/nlogin/login');
+    }
+    
+    try {
+        await this.googleLoginBtn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await this.googleLoginBtn.first().click({ force: true });
+        console.log('Clicked Google Login button. Depending on stealth, this may require manual approval or existing cookies.');
+    } catch (e) {
+        console.log('Google login button not found or already logged in.');
+    }
+  }
+
+  /**
+   * Verifies the dashboard is successfully loaded after a login attempt.
+   */
+  async verifyDashboardLoaded() {
+    console.log('Verifying dashboard is loaded...');
+    try {
+        // Wait for a generic dashboard element or the URL change
+        await this.page.waitForURL('**/mnjuser/profile**', { timeout: 30000 });
+        console.log('✅ Dashboard loaded successfully.');
+    } catch (e) {
+        console.log('⚠️ Timeout waiting for dashboard URL. Validating via DOM elements...');
+        await this.page.locator('.nI-gNb-header__wrapper, .resumeHeadline, .dashboard-container').first().waitFor({ state: 'visible', timeout: 15000 });
+        console.log('✅ Dashboard DOM element verified.');
+    }
   }
 
   /**
@@ -126,7 +214,7 @@ class NaukriPage {
     }
   }
 
-  async updateHeadline() {
+  async updateHeadline(newHeadline = null) {
     await this.handlePopups();
     await randomDelay();
     
@@ -152,6 +240,19 @@ class NaukriPage {
     await this.headlineTextArea.focus();
     await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
     
+    if (newHeadline) {
+      console.log(`Setting new AI Headline: "${newHeadline}"`);
+      await this.headlineTextArea.fill(newHeadline);
+      await this.page.waitForTimeout(1000);
+      await randomDelay();
+      await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
+      await this.page.waitForTimeout(1000);
+      await this.handlePopups();
+      await randomDelay();
+      await this.page.waitForTimeout(2000);
+      return; // If we set a new dynamic headline, we don't need the dummy second edit pass
+    }
+
     // Read current text
     const currentText = await this.headlineTextArea.inputValue();
     
