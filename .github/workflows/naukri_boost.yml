@@ -36,8 +36,8 @@ jobs:
         env:
           SECRET_AUTH_STATE: ${{ secrets.SECRET_AUTH_STATE }}
         run: |
-          mkdir -p data
-          echo "$SECRET_AUTH_STATE" > data/auth_state.json
+          mkdir -p playwright/.auth
+          echo "$SECRET_AUTH_STATE" > playwright/.auth/${{ matrix.user }}.json
           
       - name: Run Playwright Tests
         env:
@@ -45,6 +45,7 @@ jobs:
           NAUKRI_EMAIL: ${{ secrets[format('{0}_EMAIL', matrix.user)] }}
           NAUKRI_PASSWORD: ${{ secrets[format('{0}_PASSWORD', matrix.user)] }}
           NAUKRI_RESUME_PATH: ${{ matrix.resume_path }}
+          matrix_user: ${{ matrix.user }}
         run: npm run test
         
       - name: Upload Playwright Report on Failure
