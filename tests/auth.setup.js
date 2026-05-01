@@ -2,11 +2,19 @@ const { test: setup, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('../utils/stealth'); // Stealth plugin
+const NaukriPage = require('../pages/NaukriPage'); // Added for automated login
 
-const authFile = path.join(__dirname, '../data/auth_state.json');
+const user = process.env.matrix_user || 'default';
+const authFile = path.join(__dirname, `../playwright/.auth/${user}.json`);
 
 setup('authenticate', async () => {
+  // Ensure the .auth directory exists
+  if (!fs.existsSync(path.dirname(authFile))) {
+    fs.mkdirSync(path.dirname(authFile), { recursive: true });
+  }
+
   setup.setTimeout(0); // Disable timeout for manual login
+  
   // Check if auth_state.json exists and its age
   let needsLogin = true;
   if (fs.existsSync(authFile)) {
@@ -15,33 +23,41 @@ setup('authenticate', async () => {
     const ageInDays = (now - stats.mtime.getTime()) / (1000 * 60 * 60 * 24);
     
     if (ageInDays < 7) {
-      console.log('Valid auth state found. Skipping manual login.');
+      console.log(`Valid auth state found for ${user}. Skipping login.`);
       needsLogin = false;
     } else {
-      console.log('Auth state is older than 7 days. Re-authenticating.');
+      console.log(`Auth state for ${user} is older than 7 days. Re-authenticating.`);
     }
   } else {
-    console.log('No auth state found. Initializing manual login.');
+    console.log(`No auth state found for ${user}. Initializing login.`);
   }
 
   if (needsLogin) {
-    console.log('Opening browser for manual login. Please log in via Gmail...');
-    const browser = await chromium.launch({ headless: false });
+    const isCI = !!process.env.CI;
+    const headless = isCI ? true : false;
+    
+    console.log(`Opening browser for login (Headless: ${headless})...`);
+    const browser = await chromium.launch({ headless });
     const context = await browser.newContext();
     const page = await context.newPage();
     
-    await page.goto('https://www.naukri.com/nlogin/login');
-    
-    // We pause here to give the user time to manually click "Login with Google"
-    // and complete the flow. The user must click "Resume" in the Playwright inspector
-    // or wait for the dashboard URL.
-    
-    // Instead of forcing the user to use the inspector, we can wait for the profile/dashboard URL.
-    console.log('Waiting for successful login (navigating to dashboard/profile)...');
-    
-    // Wait until the URL changes to the logged-in user dashboard or profile
-    await page.waitForURL('**/mnjuser/**', { timeout: 0 }); 
-    console.log('Login successful! Saving state...');
+    const naukriPage = new NaukriPage(page);
+    const email = process.env.NAUKRI_EMAIL;
+    const password = process.env.NAUKRI_PASSWORD;
+
+    if (email && password) {
+      console.log(`Automated login sequence initiated for ${email}...`);
+      await naukriPage.loginWithCredentials(email, password);
+      console.log('Waiting for successful login (navigating to dashboard/profile)...');
+      await naukriPage.verifyDashboardLoaded();
+      console.log('Login successful! Saving state...');
+    } else {
+      console.log('No credentials provided. Falling back to manual login. Please log in via Gmail...');
+      await page.goto('https://www.naukri.com/nlogin/login');
+      console.log('Waiting for successful login (navigating to dashboard/profile)...');
+      await page.waitForURL('**/mnjuser/**', { timeout: 0 }); 
+      console.log('Login successful! Saving state...');
+    }
     
     // Save storage state into the file
     await context.storageState({ path: authFile });
