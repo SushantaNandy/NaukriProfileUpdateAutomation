@@ -16,8 +16,19 @@ async function generateHeadline(role, context = '') {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
-        const promptContext = context ? ` Use these specific proof points and context: ${context}.` : '';
-        const prompt = `Output only one line. Max 100 characters. No markdown. Generate a highly impactful and professional resume headline for a ${role}.${promptContext}`;
+        const vibes = [
+            "Achievement-First: Start with a major quantifiable achievement (e.g., 15%+ growth or ROI tracking).",
+            "Skill-First: Start with core technical or platform expertise (e.g., GA4, Mixpanel, or Tableau).",
+            "Company-First: Highlight the current or most prominent role and experience (e.g., Great Learning)."
+        ];
+        const selectedVibe = vibes[Math.floor(Math.random() * vibes.length)];
+
+        // Ensure we use the environment variable if context isn't passed directly
+        const finalContext = context || process.env.USER_PROOF_POINTS || '';
+        const promptContext = finalContext ? ` Use these specific proof points and context: ${finalContext}.` : '';
+        
+        const prompt = `Output only one line. Max 100 characters. No markdown. Generate a highly impactful and professional resume headline for a ${role}.${promptContext}
+CRITICAL INSTRUCTION - VIBE (Structure Entropy): You MUST strictly format the headline using this vibe: ${selectedVibe}`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
