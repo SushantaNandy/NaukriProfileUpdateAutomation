@@ -10,7 +10,7 @@ const test = base.extend({
   page: async ({}, use) => {
     const browser = await chromium.launch({ headless: process.env.HEADLESS !== 'false' });
     const context = await browser.newContext({
-      storageState: `playwright/.auth/${process.env.matrix_user || 'default'}.json`,
+      storageState: `playwright/.auth/${process.env.matrix_user}.json`,
       viewport: { width: 1366, height: 768 },
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       locale: 'en-IN'

@@ -29,7 +29,7 @@ module.exports = defineConfig({
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: `playwright/.auth/${process.env.matrix_user || 'default'}.json`,
+        storageState: `playwright/.auth/${process.env.matrix_user}.json`,
       },
     },
   ],

@@ -42,7 +42,7 @@ jobs:
         
       - name: Reconstruct Auth State
         env:
-          SECRET_AUTH_STATE: ${{ secrets.SECRET_AUTH_STATE }}
+          SECRET_AUTH_STATE: ${{ secrets[format('{0}_AUTH_STATE', matrix.user)] }}
         run: |
           mkdir -p playwright/.auth
           echo "$SECRET_AUTH_STATE" > playwright/.auth/${{ matrix.user }}.json

@@ -4,13 +4,27 @@ const path = require('path');
 const { chromium } = require('../utils/stealth'); // Stealth plugin
 const NaukriPage = require('../pages/NaukriPage'); // Added for automated login
 
-const user = process.env.matrix_user || 'default';
+const user = process.env.matrix_user;
+if (!user) throw new Error('matrix_user environment variable is required');
 const authFile = path.join(__dirname, `../playwright/.auth/${user}.json`);
 
 setup('authenticate', async () => {
   // Ensure the .auth directory exists
   if (!fs.existsSync(path.dirname(authFile))) {
     fs.mkdirSync(path.dirname(authFile), { recursive: true });
+  }
+
+  // Fresh Start Logic: Delete generic session files to prevent leakage
+  const defaultAuthFile = path.join(__dirname, `../playwright/.auth/default.json`);
+  const genericAuthFile = path.join(__dirname, `../playwright/.auth/auth.json`);
+  
+  if (fs.existsSync(defaultAuthFile)) {
+    console.log('Deleting legacy default.json state...');
+    fs.unlinkSync(defaultAuthFile);
+  }
+  if (fs.existsSync(genericAuthFile)) {
+    console.log('Deleting legacy auth.json state...');
+    fs.unlinkSync(genericAuthFile);
   }
 
   setup.setTimeout(0); // Disable timeout for manual login
