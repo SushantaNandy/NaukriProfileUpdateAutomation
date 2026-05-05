@@ -40,6 +40,16 @@ class NaukriPage {
     return !this.page.isClosed();
   }
 
+  async safeWait(ms) {
+    if (this.isPageOpen()) {
+      await this.safeWait(ms);
+    }
+  }
+
+  // DUMMY
+    return !this.page.isClosed();
+  }
+
   async gotoProfile() {
     await this.page.setExtraHTTPHeaders({
       'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'
@@ -47,13 +57,13 @@ class NaukriPage {
     
     // Increase randomDelay before navigation to 5-10 seconds to avoid burst detection
     console.log('Stealth: Waiting 5-10 seconds before navigating...');
-    await this.page.waitForTimeout(Math.floor(Math.random() * 5000) + 5000);
+    await this.safeWait(Math.floor(Math.random() * 5000) + 5000);
     
     await this.page.goto(this.profileUrl);
     
     // Stealth Wait to allow security scripts to finish evaluating without hanging on persistent connections
     await this.page.waitForLoadState('domcontentloaded');
-    await this.page.waitForTimeout(3000);
+    await this.safeWait(3000);
     
     // Diagnostic logging for CI
     console.log('Current URL in CI:', this.page.url());
@@ -68,7 +78,7 @@ class NaukriPage {
       console.log('Navigating back to profile after login...');
       await this.page.goto(this.profileUrl);
       await this.page.waitForLoadState('domcontentloaded');
-      await this.page.waitForTimeout(3000);
+      await this.safeWait(3000);
     }
     
     // Fast Failure wait - increased for slow CI runners
@@ -123,10 +133,10 @@ class NaukriPage {
     await this.usernameField.waitFor({ state: 'visible', timeout: 15000 });
     await this.usernameField.fill(email);
     
-    await this.page.waitForTimeout(1000);
+    await this.safeWait(1000);
     await this.passwordField.fill(password);
     
-    await this.page.waitForTimeout(1000);
+    await this.safeWait(1000);
     await this.loginSubmitBtn.first().click({ force: true });
     
     console.log('Submitted credentials. Waiting for authentication...');
@@ -199,7 +209,7 @@ class NaukriPage {
       // CI Hardening: The .docx Buffer
       if (process.env.CI === 'true') {
          console.log('CI Environment Detected: Waiting 5000ms for .docx server-side parsing...');
-         if (this.isPageOpen()) await this.page.waitForTimeout(5000);
+         if (this.isPageOpen()) await this.safeWait(5000);
       }
       
       if (this.isPageOpen()) await randomDelay();
@@ -221,7 +231,7 @@ class NaukriPage {
        throw new Error(`Upload UI verification failed for ${expectedFilename}`);
     }
 
-    if (this.isPageOpen()) await this.page.waitForTimeout(3000); 
+    if (this.isPageOpen()) await this.safeWait(3000); 
   }
 
   /**
@@ -231,16 +241,16 @@ class NaukriPage {
     try {
       // Primary Action: Press Escape twice to dismiss generic overlays
       await this.page.keyboard.press('Escape');
-      await this.page.waitForTimeout(300);
+      await this.safeWait(300);
       await this.page.keyboard.press('Escape');
-      await this.page.waitForTimeout(500); // Wait for potential fade-out
+      await this.safeWait(500); // Wait for potential fade-out
 
       // Secondary Guard: Explicitly close active layer if still visible
       if (await this.proPopupCloseBtn.isVisible()) {
         console.log('Popup detected, closing it with force...');
         await randomDelay();
         await this.proPopupCloseBtn.click({ force: true });
-        await this.page.waitForTimeout(500); // Wait for fade-out
+        await this.safeWait(500); // Wait for fade-out
         await randomDelay();
       }
     } catch (e) {
@@ -265,7 +275,7 @@ class NaukriPage {
       await this.headlineTextArea.waitFor({ state: 'visible', timeout: 5000 });
     } catch (e) {
       console.log('Retry: Headline modal not appearing, clicking edit icon again...');
-      await this.page.waitForTimeout(2000);
+      await this.safeWait(2000);
       await this.editHeadlineIcon.first().click({ force: true });
     }
     
@@ -282,7 +292,7 @@ class NaukriPage {
       } catch (error) {
         console.log('Recovery: Textarea value mismatched after filling. Forcing modal re-sync...');
         await this.page.keyboard.press('Escape');
-        await this.page.waitForTimeout(1000);
+        await this.safeWait(1000);
         await this.editHeadlineIcon.first().click({ force: true });
         await this.headlineTextArea.first().waitFor({ state: 'attached' });
         await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
@@ -290,13 +300,13 @@ class NaukriPage {
         await expect(this.headlineTextArea).toHaveValue(newHeadline, { timeout: 5000 });
       }
       
-      await this.page.waitForTimeout(1000);
+      await this.safeWait(1000);
       await randomDelay();
       await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
-      await this.page.waitForTimeout(1000);
+      await this.safeWait(1000);
       await this.handlePopups();
       await randomDelay();
-      await this.page.waitForTimeout(2000);
+      await this.safeWait(2000);
       return; // If we set a new dynamic headline, we don't need the dummy second edit pass
     }
 
@@ -316,24 +326,24 @@ class NaukriPage {
     } catch (error) {
       console.log('Recovery: Textarea value mismatched after filling. Forcing modal re-sync...');
       await this.page.keyboard.press('Escape');
-      await this.page.waitForTimeout(1000);
+      await this.safeWait(1000);
       await this.editHeadlineIcon.first().click({ force: true });
       await this.headlineTextArea.first().waitFor({ state: 'attached' });
       await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
       await this.headlineTextArea.fill(appendedText);
       await expect(this.headlineTextArea).toHaveValue(appendedText, { timeout: 5000 });
     }
-    await this.page.waitForTimeout(1000);
+    await this.safeWait(1000);
     await randomDelay();
     await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
-    await this.page.waitForTimeout(1000);
+    await this.safeWait(1000);
     await this.handlePopups();
     
     // Wait for strict modal detachment and stabilization
     await this.page.locator('.ltLayer').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
     
     // Cooldown period for React state to settle
-    await this.page.waitForTimeout(5000);
+    await this.safeWait(5000);
     await randomDelay();
     
     // Conditional Reload: verify if the headline is updated in the DOM
@@ -367,7 +377,7 @@ class NaukriPage {
       await this.headlineTextArea.waitFor({ state: 'visible', timeout: 5000 });
     } catch (e) {
       console.log('Retry: Headline modal not appearing on second edit, clicking edit icon again...');
-      await this.page.waitForTimeout(2000);
+      await this.safeWait(2000);
       await this.editHeadlineIcon.first().click({ force: true });
     }
     
@@ -383,26 +393,26 @@ class NaukriPage {
     } catch (error) {
       console.log('Recovery: Textarea value mismatched after filling. Forcing modal re-sync...');
       await this.page.keyboard.press('Escape');
-      await this.page.waitForTimeout(1000);
+      await this.safeWait(1000);
       await this.editHeadlineIcon.first().click({ force: true });
       await this.headlineTextArea.first().waitFor({ state: 'attached' });
       await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
       await this.headlineTextArea.fill(currentText);
       await expect(this.headlineTextArea).toHaveValue(currentText, { timeout: 5000 });
     }
-    await this.page.waitForTimeout(1000);
+    await this.safeWait(1000);
     await randomDelay();
     await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
-    await this.page.waitForTimeout(1000);
+    await this.safeWait(1000);
     await this.handlePopups();
     await randomDelay();
     
-    await this.page.waitForTimeout(2000);
+    await this.safeWait(2000);
   }
 
   async verifyUpdate() {
     // Wait for background API calls to finish instead of relying on a potentially unstable reload
-    await this.page.waitForTimeout(5000);
+    await this.safeWait(5000);
     
     // Ensure the Save dialog is gone and the edit icon is stable and visible again
     await this.editHeadlineIcon.first().waitFor({ state: 'visible', timeout: 10000 });

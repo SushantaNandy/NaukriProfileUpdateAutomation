@@ -17,16 +17,16 @@ async function generateHeadline(role, context = '') {
         const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
         const styles = [
-            "Style A (The Growth Hacker): Lead with the 15%+ YouTube Growth achievement.",
-            "Style B (The Data Scientist): Lead with GA4, ROI Tracking, and analytical precision.",
-            "Style C (The Strategist): Lead with brand scaling and digital impact at Great Learning."
+            "Style A (The Achiever): Lead with the most impactful quantifiable achievement from the proof points.",
+            "Style B (The Specialist): Lead with core technical or domain expertise from the proof points.",
+            "Style C (The Strategist): Lead with broad impact and overarching value from the proof points."
         ];
         const selectedStyle = styles[Math.floor(Math.random() * styles.length)];
 
         // Ensure we use the environment variable if context isn't passed directly
         const finalContext = context || process.env.USER_PROOF_POINTS || '';
         
-        const prompt = `Act as a Senior Marketing Recruiter. Create a punchy, high-impact headline for a ${role}.
+        const prompt = `Act as an Expert Recruiter. Create a punchy, high-impact headline for a ${role}.
 
 Context / Proof Points: ${finalContext}
 

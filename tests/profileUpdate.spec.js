@@ -17,6 +17,7 @@ const test = base.extend({
     });
     const page = await context.newPage();
     await use(page);
+    try { await page.waitForLoadState('networkidle', { timeout: 5000 }); } catch(e) {}
     await page.close();
     await context.close();
     await browser.close();
