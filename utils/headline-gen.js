@@ -2,8 +2,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
  * Generates an AI-powered resume headline based on role and specific context/proof points.
- * @param {string} role - The job role (e.g., 'Marketing Analyst')
- * @param {string} context - Specific achievements or keywords (e.g., '15%+ YouTube Growth, GA4')
+ * @param {string} role - The job role (e.g., 'Software Engineer')
+ * @param {string} context - Specific achievements or keywords
  * @returns {Promise<string>} - The generated headline
  */
 async function generateHeadline(role, context = '') {
@@ -32,7 +32,7 @@ Context / Proof Points: ${finalContext}
 
 Constraints:
 - Limit: Exactly 160-170 characters.
-- Vocabulary: Use at least 2 "Power Words" (e.g., Spearheading, Architecting, Exponential, Data-Driven Storytelling, Conversion-Focused, Funnel Optimization).
+- Vocabulary: Use at least 2 impactful "Power Words" strictly relevant to the provided Role and Proof Points.
 - Randomized Structure: You MUST strictly format the headline using this style: ${selectedStyle}
 - Output Format: Single line. No markdown. No hashtags. Use "|" or "•" as separators.`;
 

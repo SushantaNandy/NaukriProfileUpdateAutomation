@@ -45,7 +45,9 @@ jobs:
           SECRET_AUTH_STATE: ${{ secrets[format('{0}_AUTH_STATE', matrix.user)] }}
         run: |
           mkdir -p playwright/.auth
-          echo "$SECRET_AUTH_STATE" > playwright/.auth/${{ matrix.user }}.json
+          if [ -n "$SECRET_AUTH_STATE" ]; then
+            echo "$SECRET_AUTH_STATE" > playwright/.auth/${{ matrix.user }}.json
+          fi
           
       - name: Run Playwright Tests
         env:

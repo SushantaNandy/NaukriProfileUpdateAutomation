@@ -33,14 +33,20 @@ setup('authenticate', async () => {
   let needsLogin = true;
   if (fs.existsSync(authFile)) {
     const stats = fs.statSync(authFile);
-    const now = new Date().getTime();
-    const ageInDays = (now - stats.mtime.getTime()) / (1000 * 60 * 60 * 24);
-    
-    if (ageInDays < 7) {
-      console.log(`Valid auth state found for ${user}. Skipping login.`);
-      needsLogin = false;
+    if (stats.size === 0 || (stats.size <= 2)) { // Handle empty or just newline/empty object {}
+      console.log(`Auth state for ${user} is empty or invalid. Deleting and forcing re-authentication.`);
+      fs.unlinkSync(authFile);
+      needsLogin = true;
     } else {
-      console.log(`Auth state for ${user} is older than 7 days. Re-authenticating.`);
+      const now = new Date().getTime();
+      const ageInDays = (now - stats.mtime.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (ageInDays < 7) {
+        console.log(`Valid auth state found for ${user}. Skipping login.`);
+        needsLogin = false;
+      } else {
+        console.log(`Auth state for ${user} is older than 7 days. Re-authenticating.`);
+      }
     }
   } else {
     console.log(`No auth state found for ${user}. Initializing login.`);
