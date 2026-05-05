@@ -16,19 +16,25 @@ async function generateHeadline(role, context = '') {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
-        const vibes = [
-            "Achievement-First: Start with a major quantifiable achievement (e.g., 15%+ growth or ROI tracking).",
-            "Skill-First: Start with core technical or platform expertise (e.g., GA4, Mixpanel, or Tableau).",
-            "Company-First: Highlight the current or most prominent role and experience (e.g., Great Learning)."
+        const styles = [
+            "Style A (The Growth Hacker): Lead with the 15%+ YouTube Growth achievement.",
+            "Style B (The Data Scientist): Lead with GA4, ROI Tracking, and analytical precision.",
+            "Style C (The Strategist): Lead with brand scaling and digital impact at Great Learning."
         ];
-        const selectedVibe = vibes[Math.floor(Math.random() * vibes.length)];
+        const selectedStyle = styles[Math.floor(Math.random() * styles.length)];
 
         // Ensure we use the environment variable if context isn't passed directly
         const finalContext = context || process.env.USER_PROOF_POINTS || '';
-        const promptContext = finalContext ? ` Use these specific proof points and context: ${finalContext}.` : '';
         
-        const prompt = `Output only one line. Max 100 characters. No markdown. Generate a highly impactful and professional resume headline for a ${role}.${promptContext}
-CRITICAL INSTRUCTION - VIBE (Structure Entropy): You MUST strictly format the headline using this vibe: ${selectedVibe}`;
+        const prompt = `Act as a Senior Marketing Recruiter. Create a punchy, high-impact headline for a ${role}.
+
+Context / Proof Points: ${finalContext}
+
+Constraints:
+- Limit: Exactly 160-170 characters.
+- Vocabulary: Use at least 2 "Power Words" (e.g., Spearheading, Architecting, Exponential, Data-Driven Storytelling, Conversion-Focused, Funnel Optimization).
+- Randomized Structure: You MUST strictly format the headline using this style: ${selectedStyle}
+- Output Format: Single line. No markdown. No hashtags. Use "|" or "•" as separators.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;

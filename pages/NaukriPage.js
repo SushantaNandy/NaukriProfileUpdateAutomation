@@ -179,13 +179,39 @@ class NaukriPage {
     }
     
     // 2. Upload new resume via hidden input
-    // setInputFiles works even if the input is hidden
     await randomDelay();
+
+    // CI Hardening: State-Based Wait
+    // Catch the specific XHR/Fetch request Naukri sends during the resume save operation
+    const uploadPromise = this.page.waitForResponse(
+      response => response.request().method() === 'POST' && (response.url().includes('resume') || response.url().includes('upload') || response.url().includes('profile')), 
+      { timeout: 30000 }
+    ).catch(e => console.log('Warning: XHR state-wait timed out, relying on UI verification...'));
+
     await this.resumeInput.setInputFiles(resumePath);
-    await randomDelay();
     
-    // Wait for the upload success message/indicator (might need adjustment based on exact DOM)
-    // Often there's a loader or toast message.
+    // CI Hardening: The .docx Buffer
+    if (process.env.CI === 'true') {
+       console.log('CI Environment Detected: Waiting 5000ms for .docx server-side parsing...');
+       await this.page.waitForTimeout(5000);
+    }
+    
+    await randomDelay();
+    await uploadPromise; // Wait for the backend to store the file
+    
+    // CI Hardening: UI Content Verification
+    const path = require('path');
+    const expectedFilename = path.basename(resumePath);
+    console.log(`Verifying UI attachment for: ${expectedFilename}`);
+    
+    try {
+       await this.page.getByText(expectedFilename, { exact: false }).waitFor({ state: 'visible', timeout: 30000 });
+       console.log(`✅ Verified UI presence of uploaded file: ${expectedFilename}`);
+    } catch (e) {
+       console.error(`❌ Upload UI Verification Failed: Filename ${expectedFilename} did not appear.`);
+       throw new Error(`Upload UI verification failed for ${expectedFilename}`);
+    }
+
     await this.page.waitForTimeout(3000); 
   }
 
