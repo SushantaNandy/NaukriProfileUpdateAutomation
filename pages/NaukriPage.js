@@ -35,6 +35,10 @@ class NaukriPage {
     this.googleLoginBtn = page.locator('.google-login, button:has-text("Google"), .google-text');
   }
 
+  isPageOpen() {
+    return !this.page.isClosed();
+  }
+
   async gotoProfile() {
     await this.page.setExtraHTTPHeaders({
       'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'
@@ -168,36 +172,40 @@ class NaukriPage {
    */
   async updateResume(resumePath) {
     // 1. Delete existing resume (if visible)
-    if (await this.deleteResumeIcon.isVisible()) {
-      await randomDelay();
-      await this.deleteResumeIcon.click();
-      await randomDelay();
-      if (await this.confirmDeleteBtn.isVisible()) {
-        await this.confirmDeleteBtn.click();
-        await randomDelay();
+    if (this.isPageOpen() && await this.deleteResumeIcon.isVisible()) {
+      if (this.isPageOpen()) await randomDelay();
+      if (this.isPageOpen()) await this.deleteResumeIcon.click();
+      if (this.isPageOpen()) await randomDelay();
+      if (this.isPageOpen() && await this.confirmDeleteBtn.isVisible()) {
+        if (this.isPageOpen()) await this.confirmDeleteBtn.click();
+        if (this.isPageOpen()) await randomDelay();
       }
     }
     
     // 2. Upload new resume via hidden input
-    await randomDelay();
+    if (this.isPageOpen()) await randomDelay();
 
     // CI Hardening: State-Based Wait
-    // Catch the specific XHR/Fetch request Naukri sends during the resume save operation
-    const uploadPromise = this.page.waitForResponse(
-      response => response.request().method() === 'POST' && (response.url().includes('resume') || response.url().includes('upload') || response.url().includes('profile')), 
-      { timeout: 30000 }
-    ).catch(e => console.log('Warning: XHR state-wait timed out, relying on UI verification...'));
+    try {
+      // Catch the specific XHR/Fetch request Naukri sends during the resume save operation
+      const uploadPromise = this.page.waitForResponse(
+        response => response.request().method() === 'POST' && (response.url().includes('resume') || response.url().includes('upload') || response.url().includes('profile')), 
+        { timeout: 30000 }
+      );
 
-    await this.resumeInput.setInputFiles(resumePath);
-    
-    // CI Hardening: The .docx Buffer
-    if (process.env.CI === 'true') {
-       console.log('CI Environment Detected: Waiting 5000ms for .docx server-side parsing...');
-       await this.page.waitForTimeout(5000);
+      if (this.isPageOpen()) await this.resumeInput.setInputFiles(resumePath);
+      
+      // CI Hardening: The .docx Buffer
+      if (process.env.CI === 'true') {
+         console.log('CI Environment Detected: Waiting 5000ms for .docx server-side parsing...');
+         if (this.isPageOpen()) await this.page.waitForTimeout(5000);
+      }
+      
+      if (this.isPageOpen()) await randomDelay();
+      if (this.isPageOpen()) await uploadPromise; // Wait for the backend to store the file
+    } catch (error) {
+      throw new Error('Naukri Backend failed to acknowledge .docx upload within 30s');
     }
-    
-    await randomDelay();
-    await uploadPromise; // Wait for the backend to store the file
     
     // CI Hardening: UI Content Verification
     const path = require('path');
@@ -205,14 +213,14 @@ class NaukriPage {
     console.log(`Verifying UI attachment for: ${expectedFilename}`);
     
     try {
-       await this.page.getByText(expectedFilename, { exact: false }).waitFor({ state: 'visible', timeout: 30000 });
+       if (this.isPageOpen()) await this.page.getByText(expectedFilename, { exact: false }).waitFor({ state: 'visible', timeout: 30000 });
        console.log(`✅ Verified UI presence of uploaded file: ${expectedFilename}`);
     } catch (e) {
        console.error(`❌ Upload UI Verification Failed: Filename ${expectedFilename} did not appear.`);
        throw new Error(`Upload UI verification failed for ${expectedFilename}`);
     }
 
-    await this.page.waitForTimeout(3000); 
+    if (this.isPageOpen()) await this.page.waitForTimeout(3000); 
   }
 
   /**
@@ -297,12 +305,26 @@ class NaukriPage {
     await this.page.waitForTimeout(5000);
     await randomDelay();
     
-    // Force Navigation Reset to completely destroy lingering React states
-    console.log('Clean Slate: Reloading profile to destroy ghost modals...');
-    await this.page.goto(this.profileUrl, { waitUntil: 'domcontentloaded' });
-    
-    // Re-Guard CSS
-    await this.page.addStyleTag({ content: '.success-message-container, .toast, .trans-layer { display: none !important; }' }).catch(() => {});
+    // Conditional Reload: verify if the headline is updated in the DOM
+    // We appended a '.' to currentText
+    const expectedText = currentText + '.';
+    let requiresReload = false;
+    try {
+       // Since text can be quite long or formatted, we check if the DOM contains it
+       await this.page.getByText(expectedText, { exact: false }).waitFor({ state: 'visible', timeout: 5000 });
+       console.log('UI updated dynamically, skipping reload.');
+    } catch (e) {
+       console.log('UI failed to reflect change dynamically. Reloading...');
+       requiresReload = true;
+    }
+
+    if (requiresReload) {
+       console.log('Clean Slate: Reloading profile to destroy ghost modals...');
+       await this.page.goto(this.profileUrl, { waitUntil: 'domcontentloaded' });
+       
+       // Re-Guard CSS
+       await this.page.addStyleTag({ content: '.success-message-container, .toast, .trans-layer { display: none !important; }' }).catch(() => {});
+    }
     
     // Confirm Icon Visibility with fresh locator timeout before clicking edit again
     await this.editHeadlineIcon.first().waitFor({ state: 'visible', timeout: 10000 });

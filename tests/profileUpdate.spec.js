@@ -17,6 +17,8 @@ const test = base.extend({
     });
     const page = await context.newPage();
     await use(page);
+    await page.close();
+    await context.close();
     await browser.close();
   }
 });
