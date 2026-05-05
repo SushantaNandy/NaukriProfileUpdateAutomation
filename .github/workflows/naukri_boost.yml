@@ -19,7 +19,7 @@ jobs:
           - user: SUSHANTA
             resume_path: ./data/SDETSushantaResume.pdf
             role: 'Software Engineer'
-            proof_points: ''
+            proof_points: 'Backend Expert, FNZ Group, Playwright'
           - user: JANVI
             resume_path: ./data/Janvi_Rai_Marketing_Analyst_Resume.docx
             role: 'Marketing Analyst'

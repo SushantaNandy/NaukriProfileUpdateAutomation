@@ -1,4 +1,5 @@
 const { randomDelay } = require('../utils/helpers');
+const { expect } = require('@playwright/test');
 
 class NaukriPage {
   /**
@@ -268,15 +269,27 @@ class NaukriPage {
       await this.editHeadlineIcon.first().click({ force: true });
     }
     
-    // Increased Wait
-    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 20000 });
-    
-    await this.headlineTextArea.focus();
-    await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
+    // Handle Modal Re-mounting
+    await this.headlineTextArea.first().waitFor({ state: 'attached' });
+    await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
     
     if (newHeadline) {
       console.log(`Setting new AI Headline: "${newHeadline}"`);
       await this.headlineTextArea.fill(newHeadline);
+      
+      try {
+        await expect(this.headlineTextArea).toHaveValue(newHeadline, { timeout: 5000 });
+      } catch (error) {
+        console.log('Recovery: Textarea value mismatched after filling. Forcing modal re-sync...');
+        await this.page.keyboard.press('Escape');
+        await this.page.waitForTimeout(1000);
+        await this.editHeadlineIcon.first().click({ force: true });
+        await this.headlineTextArea.first().waitFor({ state: 'attached' });
+        await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
+        await this.headlineTextArea.fill(newHeadline);
+        await expect(this.headlineTextArea).toHaveValue(newHeadline, { timeout: 5000 });
+      }
+      
       await this.page.waitForTimeout(1000);
       await randomDelay();
       await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
@@ -287,11 +300,29 @@ class NaukriPage {
       return; // If we set a new dynamic headline, we don't need the dummy second edit pass
     }
 
+    // Handle Modal Re-mounting for the fallback pass
+    await this.headlineTextArea.first().waitFor({ state: 'attached' });
+    await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
+
     // Read current text
     const currentText = await this.headlineTextArea.inputValue();
     
     // Append '.' and save
-    await this.headlineTextArea.fill(currentText + '.');
+    const appendedText = currentText + '.';
+    await this.headlineTextArea.fill(appendedText);
+    
+    try {
+      await expect(this.headlineTextArea).toHaveValue(appendedText, { timeout: 5000 });
+    } catch (error) {
+      console.log('Recovery: Textarea value mismatched after filling. Forcing modal re-sync...');
+      await this.page.keyboard.press('Escape');
+      await this.page.waitForTimeout(1000);
+      await this.editHeadlineIcon.first().click({ force: true });
+      await this.headlineTextArea.first().waitFor({ state: 'attached' });
+      await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
+      await this.headlineTextArea.fill(appendedText);
+      await expect(this.headlineTextArea).toHaveValue(appendedText, { timeout: 5000 });
+    }
     await this.page.waitForTimeout(1000);
     await randomDelay();
     await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
@@ -340,14 +371,25 @@ class NaukriPage {
       await this.editHeadlineIcon.first().click({ force: true });
     }
     
-    // Increased Wait
-    await this.headlineTextArea.waitFor({ state: 'visible', timeout: 20000 });
-    
-    await this.headlineTextArea.focus();
-    await this.page.waitForFunction(el => el.value.length > 0, await this.headlineTextArea.elementHandle());
+    // Handle Modal Re-mounting
+    await this.headlineTextArea.first().waitFor({ state: 'attached' });
+    await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
     
     // Remove '.' and save
     await this.headlineTextArea.fill(currentText);
+    
+    try {
+      await expect(this.headlineTextArea).toHaveValue(currentText, { timeout: 5000 });
+    } catch (error) {
+      console.log('Recovery: Textarea value mismatched after filling. Forcing modal re-sync...');
+      await this.page.keyboard.press('Escape');
+      await this.page.waitForTimeout(1000);
+      await this.editHeadlineIcon.first().click({ force: true });
+      await this.headlineTextArea.first().waitFor({ state: 'attached' });
+      await expect(this.headlineTextArea).toBeVisible({ timeout: 20000 });
+      await this.headlineTextArea.fill(currentText);
+      await expect(this.headlineTextArea).toHaveValue(currentText, { timeout: 5000 });
+    }
     await this.page.waitForTimeout(1000);
     await randomDelay();
     await this.saveHeadlineBtn.filter({ visible: true }).first().click({ force: true });
