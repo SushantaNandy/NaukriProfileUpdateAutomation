@@ -42,12 +42,8 @@ class NaukriPage {
 
   async safeWait(ms) {
     if (this.isPageOpen()) {
-      await this.safeWait(ms);
+      await this.page.waitForTimeout(ms);
     }
-  }
-
-  // DUMMY
-    return !this.page.isClosed();
   }
 
   async gotoProfile() {
