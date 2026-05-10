@@ -8,7 +8,7 @@ const { chromium } = require('../utils/stealth');
 // Override the default page fixture to use playwright-extra stealth
 const test = base.extend({
   page: async ({}, use) => {
-    const browser = await chromium.launch({ headless: process.env.HEADLESS !== 'false' });
+    const browser = await chromium.launch({ headless: process.env.HEADLESS !== 'false', args: ['--disable-http2'] });
     const context = await browser.newContext({
       storageState: `playwright/.auth/${process.env.matrix_user}.json`,
       viewport: { width: 1366, height: 768 },

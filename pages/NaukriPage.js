@@ -55,7 +55,22 @@ class NaukriPage {
     console.log('Stealth: Waiting 5-10 seconds before navigating...');
     await this.safeWait(Math.floor(Math.random() * 5000) + 5000);
     
-    await this.page.goto(this.profileUrl);
+    if (process.env.CI === 'true') {
+      console.log('CI Environment Detected: Waiting for networkidle before navigating...');
+      try { await this.page.waitForLoadState('networkidle', { timeout: 10000 }); } catch (e) {}
+    }
+    
+    try {
+      await this.page.goto(this.profileUrl);
+    } catch (e) {
+      if (e.message.includes('ERR_HTTP2_PROTOCOL_ERROR') || e.message.includes('protocol error') || e.message.toLowerCase().includes('protocol')) {
+        console.log('Protocol Error detected during navigation. Waiting 5s and retrying with waitUntil: commit...');
+        await this.safeWait(5000);
+        await this.page.goto(this.profileUrl, { waitUntil: 'commit' });
+      } else {
+        throw e;
+      }
+    }
     
     // Stealth Wait to allow security scripts to finish evaluating without hanging on persistent connections
     await this.page.waitForLoadState('domcontentloaded');

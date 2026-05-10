@@ -57,7 +57,7 @@ setup('authenticate', async () => {
     const headless = isCI ? true : false;
     
     console.log(`Opening browser for login (Headless: ${headless})...`);
-    const browser = await chromium.launch({ headless });
+    const browser = await chromium.launch({ headless, args: ['--disable-http2'] });
     const context = await browser.newContext();
     const page = await context.newPage();
     
