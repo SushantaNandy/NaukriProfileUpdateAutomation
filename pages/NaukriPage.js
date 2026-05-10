@@ -56,17 +56,17 @@ class NaukriPage {
     await this.safeWait(Math.floor(Math.random() * 5000) + 5000);
     
     if (process.env.CI === 'true') {
-      console.log('CI Environment Detected: Waiting for networkidle before navigating...');
-      try { await this.page.waitForLoadState('networkidle', { timeout: 10000 }); } catch (e) {}
+      console.log('CI Environment Detected: Waiting for domcontentloaded before navigating...');
+      try { await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }); } catch (e) {}
     }
     
     try {
-      await this.page.goto(this.profileUrl);
+      await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
     } catch (e) {
       if (e.message.includes('ERR_HTTP2_PROTOCOL_ERROR') || e.message.includes('protocol error') || e.message.toLowerCase().includes('protocol')) {
         console.log('Protocol Error detected during navigation. Waiting 5s and retrying with waitUntil: commit...');
         await this.safeWait(5000);
-        await this.page.goto(this.profileUrl, { waitUntil: 'commit' });
+        await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
       } else {
         throw e;
       }
