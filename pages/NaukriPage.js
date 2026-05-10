@@ -61,12 +61,12 @@ class NaukriPage {
     }
     
     try {
-      await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
+      await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 30000 });
     } catch (e) {
       if (e.message.includes('ERR_HTTP2_PROTOCOL_ERROR') || e.message.includes('protocol error') || e.message.toLowerCase().includes('protocol')) {
         console.log('Protocol Error detected during navigation. Waiting 5s and retrying with waitUntil: commit...');
         await this.safeWait(5000);
-        await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
+        await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 30000 });
       } else {
         throw e;
       }
