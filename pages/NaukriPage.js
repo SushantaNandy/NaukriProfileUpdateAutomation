@@ -63,6 +63,7 @@ class NaukriPage {
     try {
       await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
     } catch (e) {
+      console.log(`Initial Navigation Error: ${e.message}`);
       if (e.message.includes('ERR_HTTP2_PROTOCOL_ERROR') || e.message.includes('protocol error') || e.message.toLowerCase().includes('protocol')) {
         console.log('Protocol Error detected during navigation. Waiting 5s and retrying with waitUntil: commit...');
         await this.safeWait(5000);
@@ -72,14 +73,23 @@ class NaukriPage {
           if (this.page.url().includes('mnjuser/profile')) {
             console.log('Navigation timeout or error, but we are already on the profile page. Proceeding.');
           } else {
-            throw retryError;
+            console.log('Protocol retry failed. Attempting root domain bounce...');
+            await this.page.evaluate(() => window.stop()).catch(()=>{});
+            await this.page.goto('https://www.naukri.com/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(()=>{});
+            await this.safeWait(5000);
+            await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
           }
         }
       } else if (e.message.includes('Timeout') || e.message.toLowerCase().includes('timeout')) {
         if (this.page.url().includes('mnjuser/profile')) {
           console.log('Navigation timeout, but we are already on the profile page. Proceeding.');
         } else {
-          throw e;
+          console.log('Hard Navigation Timeout. Attempting to bounce through root domain to establish connection...');
+          await this.page.evaluate(() => window.stop()).catch(()=>{});
+          await this.page.goto('https://www.naukri.com/', { waitUntil: 'commit', timeout: 30000 }).catch((err)=>console.log('Root bounce warning:', err.message));
+          await this.safeWait(5000);
+          console.log('Retrying profile navigation...');
+          await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
         }
       } else {
         throw e;
