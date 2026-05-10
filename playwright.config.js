@@ -13,7 +13,7 @@ module.exports = defineConfig({
     // General settings
     trace: 'on-first-retry',
     viewport: { width: 1366, height: 768 },
-    headless: process.env.HEADLESS === 'false' ? false : true,
+    headless: process.env.CI ? true : (process.env.HEADLESS === 'false' ? false : true),
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     locale: 'en-IN',
   },

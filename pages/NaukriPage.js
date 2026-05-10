@@ -56,17 +56,31 @@ class NaukriPage {
     await this.safeWait(Math.floor(Math.random() * 5000) + 5000);
     
     if (process.env.CI === 'true') {
-      console.log('CI Environment Detected: Waiting for domcontentloaded before navigating...');
-      try { await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }); } catch (e) {}
+      console.log('CI Environment Detected: Waiting for context to settle before navigating...');
+      await this.safeWait(5000);
     }
     
     try {
-      await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 30000 });
+      await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
     } catch (e) {
       if (e.message.includes('ERR_HTTP2_PROTOCOL_ERROR') || e.message.includes('protocol error') || e.message.toLowerCase().includes('protocol')) {
         console.log('Protocol Error detected during navigation. Waiting 5s and retrying with waitUntil: commit...');
         await this.safeWait(5000);
-        await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 30000 });
+        try {
+          await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
+        } catch (retryError) {
+          if (this.page.url().includes('mnjuser/profile')) {
+            console.log('Navigation timeout or error, but we are already on the profile page. Proceeding.');
+          } else {
+            throw retryError;
+          }
+        }
+      } else if (e.message.includes('Timeout') || e.message.toLowerCase().includes('timeout')) {
+        if (this.page.url().includes('mnjuser/profile')) {
+          console.log('Navigation timeout, but we are already on the profile page. Proceeding.');
+        } else {
+          throw e;
+        }
       } else {
         throw e;
       }

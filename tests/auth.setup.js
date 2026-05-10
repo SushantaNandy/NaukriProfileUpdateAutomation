@@ -54,10 +54,10 @@ setup('authenticate', async () => {
 
   if (needsLogin) {
     const isCI = !!process.env.CI;
-    const headless = isCI ? true : false;
+    const headless = isCI ? true : (process.env.HEADLESS === 'false' ? false : true);
     
     console.log(`Opening browser for login (Headless: ${headless})...`);
-    const browser = await chromium.launch({ headless, args: ['--disable-http2'] });
+    const browser = await chromium.launch({ headless, args: ['--disable-http2', '--disable-blink-features=AutomationControlled'] });
     const context = await browser.newContext();
     const page = await context.newPage();
     
