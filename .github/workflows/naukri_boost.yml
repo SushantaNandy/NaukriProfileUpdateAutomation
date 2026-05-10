@@ -24,6 +24,10 @@ jobs:
             resume_path: ./data/Janvi_Rai_Marketing_Analyst_Resume.docx
             role: 'Marketing Analyst'
             proof_points: '15%+ YouTube Growth, GA4, ROI Tracking, Great Learning'
+          - user: SAKSHAM
+            resume_path: ./data/Saksham_Agrawal_QA_Resume_Clean.docx
+            role: 'SDET / Automation Tester'
+            proof_points: 'Selenium, Java, API Testing, Framework Design'
     
     steps:
       - name: Checkout Repository

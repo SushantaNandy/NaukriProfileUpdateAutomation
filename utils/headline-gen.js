@@ -24,10 +24,20 @@ async function generateHeadline(role, context = '') {
         "Digital Marketing Analyst | GA4 Expert | ROI & Funnel Optimization | Great Learning"
     ];
 
+    const sakshamHeadlines = [
+        "SDET | Automation Engineer | Selenium, Java & API Testing | Quality Assurance Specialist",
+        "Senior Automation Tester | SDET | Expert in Selenium & Java Frameworks | QA Lead",
+        "SDET | Quality Assurance Engineer | Specialized in Automation & Framework Design",
+        "Automation Testing Expert | SDET | Selenium WebDriver & Java Backend Testing",
+        "Senior SDET | Performance & Automation Testing Specialist | Selenium & Java Expert"
+    ];
+
     let selectedArray;
 
     if (user.toUpperCase() === 'JANVI') {
         selectedArray = janviHeadlines;
+    } else if (user.toUpperCase() === 'SAKSHAM') {
+        selectedArray = sakshamHeadlines;
     } else {
         selectedArray = sushantaHeadlines; // Defaults to SDET headlines for SUSHANTA or any missing user
     }

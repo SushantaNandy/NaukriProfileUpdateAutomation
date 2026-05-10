@@ -1,0 +1,233 @@
+{
+  "cookies": [
+    {
+      "name": "MYNAUKBMS[resolution]",
+      "value": "1280",
+      "domain": "www.naukri.com",
+      "path": "/nlogin",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_t_ds",
+      "value": "2b8a32201778417248-402b8a3220-02b8a3220",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953248.769036,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "J",
+      "value": "0",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953286.06117,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_t_ds",
+      "value": "39418131044553942897140-1778417249.514",
+      "domain": ".logs.infoedgeindia.com",
+      "path": "/",
+      "expires": 1809953249.490579,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ak_bmsc",
+      "value": "C92CC45781D37B2BE084F445E1AEC77A~000000000000000000000000000000~YAAQhXBWuET6Bt2dAQAAQ67tER/jyWSgpQ2C7kS/PtSCyPN311Ojs7x61vsZbJ1lyA7P5v/cd8IwUQVXWAQYzSGlhAoia4DKz7GjrdvWpELGub8MyNHkI+cXO9PF6cjR3LxPTP4ThkxqMiOQnxcmdwggavBr/pV7fEFiY60UjC20BDKuAP3LmY/C2V5hP0A0i9iqtozNRTB1kiop7z4pHPZc6GMEDL1MVXl+NN7VRH2eQn2tMzdAoFf28gKt6fDh7/s1f/r6Mj8owBINCvRHKekmEKf5I82o/8S7c1OcBomXFhxYp+AQmgkcAdy8W0XMHQCU9Nn8bsECh4iJlFrv3BS0ePaOE8rdGNL7Wc0XSYI42lA6T+/9qDMwWFZkRR/zgAi20AG5KoRhSgFY3uObw4dKpcwkYQmzIQDo4C7VE6wVIeTwCcvAsysyjaXP2jj33V5OIUUr2cYU+7S3vmMwlPKfip7RCCTINosKECJt2uNvxawy02j+dHlwD2WdDGC/WcAO9DlXzraad1Wj4oGuxYIip18oIO+J984lHQ==",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1778424448.831159,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.1974100044.1778417250",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1812977250.199594,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "IDE",
+      "value": "AHWqTUmpNRt2Pv6Px-7WEUO6n4r0Mc5m2qMwMvPJGoVQsn8uo20gt2NWjjPSVVM1",
+      "domain": ".doubleclick.net",
+      "path": "/",
+      "expires": 1812977268.273121,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_gcl_au",
+      "value": "1.1.2048612904.1778417250.641850165.1778417268.1778417285",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1786193250,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "nauk_at",
+      "value": "eyJraWQiOiIzIiwidHlwIjoiSldUIiwiYWxnIjoiUlM1MTIifQ.eyJkZXZpY2VUeXBlIjoiZDNza3QwcCIsInVkX3Jlc0lkIjoxOTM5MDI5NTgsInN1YiI6IjIwMzMyMDQwMCIsInVkX3VzZXJuYW1lIjoiZjE2MTUxMTIyNy45MDE5IiwidWRfaXNFbWFpbCI6dHJ1ZSwiaXNzIjoiSW5mb0VkZ2UgSW5kaWEgUHZ0LiBMdGQuIiwidXNlckFnZW50IjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzE0Ny4wLjAuMCBTYWZhcmkvNTM3LjM2IiwiaXBBZHJlc3MiOiIyNDA5OjQwZDA6MjAyNTplZjVmOjNkN2U6OWRkYjoxMzQyOmIwMjYiLCJ1ZF9pc1RlY2hPcHNMb2dpbiI6ZmFsc2UsInVzZXJJZCI6MjAzMzIwNDAwLCJzdWJVc2VyVHlwZSI6ImpvYnNlZWtlciIsInVzZXJTdGF0ZSI6IkFVVEhFTlRJQ0FURUQiLCJ1ZF9pc1BhaWRDbGllbnQiOmZhbHNlLCJ1ZF9lbWFpbFZlcmlmaWVkIjp0cnVlLCJ1c2VyVHlwZSI6ImpvYnNlZWtlciIsInNlc3Npb25TdGF0VGltZSI6IjIwMjYtMDUtMTBUMTg6MTg6MDUiLCJ1ZF9lbWFpbCI6InNha3NoYW0wMDI5QGdtYWlsLmNvbSIsInVzZXJSb2xlIjoidXNlciIsImV4cCI6MTc3ODQyMDg4NSwidG9rZW5UeXBlIjoiYWNjZXNzVG9rZW4iLCJpYXQiOjE3Nzg0MTcyODUsImp0aSI6Ijg0MzdjNjVjOWEzOTQyY2FhZWE5NGFhYTRiZWQ2ZmRlIiwicG9kSWQiOiJwcm9kLTg1ZGI2OWZkNDgtbHg0d3MifQ.IFwJmcPvjUNnhCjgw_SwT30gYprypuWiWsdpL6VmHjeB_07iyTzlD5HxlYvfFjs_k99uUswujna1UTbMJI7PCNjPo_N8eiPzMPkPC06-uMQgDclqG1fRnKwLzl4h1A50H9GkTHB4x5HJVqO_Tr1abyyExPjSNqinP8pbCv5SwX4wOA1KgZR1nvzUJvmMmYw1d732RaM7C28n1PYhApdIHzsxoTtNpNEa4j52SOryE0xuomWozGrHGCd0_laOlYVQ5qPhBWydGWGTM33nxHnAACRjYnDMy5eqHZbtPVhXCc-B4tZm4Eijh4i3u7JlYZ-U0fnLmltHVmgTnKgzLquSTA",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1778420885.589333,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "nauk_rt",
+      "value": "8437c65c9a3942caaea94aaa4bed6fde",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589443,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "is_login",
+      "value": "1",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1778420885.589466,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "nauk_sid",
+      "value": "8437c65c9a3942caaea94aaa4bed6fde",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589481,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "nauk_otl",
+      "value": "8437c65c9a3942caaea94aaa4bed6fde",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589499,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "NKWAP",
+      "value": "4321d5443bd6c202c77bca588c4aa9619c4e480c32f5a4f2ef7792c4a3e682ea92d2d6ac5f21f68f~143afc833679c94c7492bac3ba6d1ab648e91df100d33bf8f421bfbb83ed0d2d~1~0",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589527,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "MYNAUKRI[UNID]",
+      "value": "bd796f0d49f446809ba7117b479d112d",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589544,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "nauk_ps",
+      "value": "default",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589588,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "nauk_cs",
+      "value": "default",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1809953285.589635,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HOWTORT",
+      "value": "ul=1778417285603&r=https%3A%2F%2Fwww.naukri.com%2Fnlogin%2Flogin&hd=1778417286064",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1778417406,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ga_K2YBNZVRLL",
+      "value": "GS2.1.s1778417250$o1$g1$t1778417286$j24$l0$h0",
+      "domain": ".naukri.com",
+      "path": "/",
+      "expires": 1812977286.073669,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.naukri.com",
+      "localStorage": [
+        {
+          "name": "tdsLogEpoch1_0",
+          "value": "1778417249200"
+        },
+        {
+          "name": "version_ub",
+          "value": "4"
+        },
+        {
+          "name": "eventName_ub",
+          "value": "\"loginClick\""
+        },
+        {
+          "name": "eventId_ub",
+          "value": "\"796dfa48-61bf-72dd-9fb1-d4211a35f787-1778417285597\""
+        },
+        {
+          "name": "cnid_ub",
+          "value": "\"\""
+        },
+        {
+          "name": "deviceId_ub",
+          "value": "\"796dfa48-61bf-72dd-9fb1-d4211a35f787\""
+        },
+        {
+          "name": "uniqueDid_ub",
+          "value": "\"796dfa48-61bf-72dd-9fb1-d4211a35f787-1778417249992\""
+        },
+        {
+          "name": "_gcl_ls",
+          "value": "{\"schema\":\"gcl\",\"version\":1,\"gcl_ctr\":{\"value\":{\"value\":2,\"timeouts\":0,\"errors\":0,\"eopCount\":0,\"creationTimeMs\":1778417286496},\"expires\":1786193286496}}"
+        }
+      ]
+    }
+  ]
+}
