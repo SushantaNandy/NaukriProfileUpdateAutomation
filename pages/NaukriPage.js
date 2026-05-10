@@ -8,16 +8,17 @@ class NaukriPage {
   constructor(page) {
     this.page = page;
     this.profileUrl = 'https://www.naukri.com/mnjuser/profile?id=&altresid';
-    
+    this.initLocators();
+  }
+
+  initLocators() {
+    const page = this.page;
     // Locators
     this.resumeInput = page.locator('input[type="file"]').first();
-    // Assuming the resume delete bin icon has a specific class or role. 
-    // We will use a more generic text or locator. We might need to adjust based on actual DOM.
     this.deleteResumeIcon = page.locator('.trans-icon'); // Common class for delete icon on Naukri
     this.confirmDeleteBtn = page.getByRole('button', { name: 'Delete', exact: true });
     
     // Headline locators
-    // Usually the edit icon is near the "Resume Headline" text.
     this.resumeHeadlineSection = page.locator('.resumeHeadline');
     this.editHeadlineIcon = this.resumeHeadlineSection.locator('.edit');
     this.headlineTextArea = page.locator('textarea[id="resumeHeadlineTxt"]');
@@ -46,6 +47,25 @@ class NaukriPage {
     }
   }
 
+  async respawnPage() {
+    console.log('--- EXECUTING PAGE RESPAWN PROTOCOL ---');
+    try {
+      const context = this.page.context();
+      console.log('Closing dead/poisoned page instance...');
+      await this.page.close().catch(() => {});
+      
+      console.log('Spawning fresh page instance from context...');
+      this.page = await context.newPage();
+      
+      console.log('Rebinding locators to new page...');
+      this.initLocators();
+      
+      console.log('--- RESPAWN COMPLETE ---');
+    } catch (e) {
+      throw new Error(`CRITICAL: Page Respawn Protocol Failed - ${e.message}`);
+    }
+  }
+
   async gotoProfile() {
     await this.page.setExtraHTTPHeaders({
       'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'
@@ -60,39 +80,45 @@ class NaukriPage {
       await this.safeWait(5000);
     }
     
+    // Phase 1: Homepage Warmup (Simulate human arrival)
+    console.log('Phase 1: Homepage Warmup (Establishing Trusted TCP/TLS connection)');
+    try {
+      await this.page.goto('https://www.naukri.com/', { waitUntil: 'commit', timeout: 30000 });
+      await this.safeWait(3000); // Let the connection pool settle
+    } catch (e) {
+      console.log(`Homepage Warmup Failed: ${e.message}`);
+      console.log('Tarpit detected during Warmup. Respawning page...');
+      await this.respawnPage();
+      await this.page.goto('https://www.naukri.com/', { waitUntil: 'commit', timeout: 30000 }).catch(() => console.log('Warmup completely bypassed. Proceeding to deep link.'));
+    }
+
+    // Phase 2: Deep Link Profile Navigation
+    console.log('Phase 2: Deep Link Profile Navigation');
     try {
       await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
     } catch (e) {
-      console.log(`Initial Navigation Error: ${e.message}`);
-      if (e.message.includes('ERR_HTTP2_PROTOCOL_ERROR') || e.message.includes('protocol error') || e.message.toLowerCase().includes('protocol')) {
-        console.log('Protocol Error detected during navigation. Waiting 5s and retrying with waitUntil: commit...');
-        await this.safeWait(5000);
+      console.log(`Initial Deep Link Navigation Error: ${e.message}`);
+      
+      if (this.page.url().includes('mnjuser/profile')) {
+        console.log('Navigation timeout, but we are already on the profile page. Proceeding.');
+      } else {
+        console.log('Tarpit/Hang detected on deep link. Initiating Phase 3 Respawn...');
+        await this.respawnPage();
+        
+        await this.page.setExtraHTTPHeaders({
+          'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'
+        });
+        
+        console.log('Retrying Deep Link Profile Navigation on clean respawned instance...');
         try {
           await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
-        } catch (retryError) {
-          if (this.page.url().includes('mnjuser/profile')) {
-            console.log('Navigation timeout or error, but we are already on the profile page. Proceeding.');
-          } else {
-            console.log('Protocol retry failed. Attempting root domain bounce...');
-            await this.page.evaluate(() => window.stop()).catch(()=>{});
-            await this.page.goto('https://www.naukri.com/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(()=>{});
-            await this.safeWait(5000);
-            await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
-          }
+        } catch (fatalError) {
+           if (this.page.url().includes('mnjuser/profile')) {
+             console.log('Navigation timeout on retry, but we are already on the profile page. Proceeding.');
+           } else {
+             throw new Error(`Fatal Navigation Error even after page respawn: ${fatalError.message}`);
+           }
         }
-      } else if (e.message.includes('Timeout') || e.message.toLowerCase().includes('timeout')) {
-        if (this.page.url().includes('mnjuser/profile')) {
-          console.log('Navigation timeout, but we are already on the profile page. Proceeding.');
-        } else {
-          console.log('Hard Navigation Timeout. Attempting to bounce through root domain to establish connection...');
-          await this.page.evaluate(() => window.stop()).catch(()=>{});
-          await this.page.goto('https://www.naukri.com/', { waitUntil: 'commit', timeout: 30000 }).catch((err)=>console.log('Root bounce warning:', err.message));
-          await this.safeWait(5000);
-          console.log('Retrying profile navigation...');
-          await this.page.goto(this.profileUrl, { waitUntil: 'commit', timeout: 60000 });
-        }
-      } else {
-        throw e;
       }
     }
     
