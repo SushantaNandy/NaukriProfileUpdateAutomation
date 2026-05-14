@@ -1,0 +1,187 @@
+/* ==========================================================================
+   Auth Pages (Login + Signup) — Shared Styles
+   ========================================================================== */
+
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Background glow */
+.auth-bg-glow {
+  position: fixed;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- Left Side — Branding ---------- */
+.auth-branding {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-12);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-logo {
+  position: absolute;
+  top: var(--space-8);
+  left: var(--space-12);
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.auth-branding-content {
+  max-width: 480px;
+}
+
+.auth-branding-title {
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: var(--space-4);
+  letter-spacing: -1px;
+}
+
+.auth-branding-desc {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: var(--space-10);
+}
+
+.auth-branding-stats {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.auth-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.auth-stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+
+/* ---------- Right Side — Form ---------- */
+.auth-form-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-form-card {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-10);
+}
+
+.auth-form-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.auth-form-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-8);
+}
+
+/* Error Message */
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-6);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Form layout */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.auth-form .btn {
+  margin-top: var(--space-2);
+}
+
+.auth-form .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Switch text */
+.auth-switch-text {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-6);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .auth-page {
+    flex-direction: column;
+  }
+
+  .auth-branding {
+    display: none;
+  }
+
+  .auth-form-section {
+    padding: var(--space-6);
+  }
+
+  .auth-form-card {
+    max-width: 100%;
+  }
+
+  /* Show a small logo on mobile */
+  .auth-form-card::before {
+    content: 'NaukriBoost';
+    display: block;
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: var(--space-8);
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

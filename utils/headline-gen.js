@@ -6,7 +6,9 @@
  * @returns {Promise<string>} - The randomly selected static headline
  */
 async function generateHeadline(role, context = '') {
-    const user = process.env.matrix_user || 'SUSHANTA';
+    const user = process.env.matrix_user;
+    const userRole = process.env.USER_ROLE || role || 'Software Professional';
+    const proofPoints = process.env.USER_PROOF_POINTS || context || '';
 
     const sushantaHeadlines = [
         "Senior Software Engineer | Backend Expert | Java & Playwright Automation | FNZ Group",
@@ -32,18 +34,26 @@ async function generateHeadline(role, context = '') {
         "Senior SDET | Performance & Automation Testing Specialist | Selenium & Java Expert"
     ];
 
-    let selectedArray;
-
-    if (user.toUpperCase() === 'JANVI') {
-        selectedArray = janviHeadlines;
-    } else if (user.toUpperCase() === 'SAKSHAM') {
-        selectedArray = sakshamHeadlines;
-    } else {
-        selectedArray = sushantaHeadlines; // Defaults to SDET headlines for SUSHANTA or any missing user
+    // If legacy static user is provided, use static arrays
+    if (user && user.toUpperCase() === 'SUSHANTA') {
+        return sushantaHeadlines[Math.floor(Math.random() * sushantaHeadlines.length)];
+    } else if (user && user.toUpperCase() === 'JANVI') {
+        return janviHeadlines[Math.floor(Math.random() * janviHeadlines.length)];
+    } else if (user && user.toUpperCase() === 'SAKSHAM') {
+        return sakshamHeadlines[Math.floor(Math.random() * sakshamHeadlines.length)];
     }
 
-    const randomIndex = Math.floor(Math.random() * selectedArray.length);
-    return selectedArray[randomIndex];
+    // SaaS Mode: Dynamic basic generation based on user inputs
+    const adjectives = ['Senior', 'Expert', 'Specialist', 'Lead', 'Professional'];
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    
+    // Split proof points into keywords if available
+    const keywords = proofPoints.split(',').map(k => k.trim()).filter(k => k.length > 0);
+    const keywordStr = keywords.length > 0 ? ` | ${keywords.slice(0, 3).join(' & ')}` : '';
+
+    const dynamicHeadline = `${randomAdjective} ${userRole}${keywordStr} | Driven by Results`;
+    
+    return dynamicHeadline;
 }
 
 module.exports = { generateHeadline };

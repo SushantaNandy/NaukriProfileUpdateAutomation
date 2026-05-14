@@ -1,0 +1,358 @@
+# NaukriBoost — B2C SaaS Implementation Plan
+
+## Vision
+A web application where users sign up, connect their Naukri account (one-time browser login), upload their resume, and the system automatically keeps their profile "fresh" daily — boosting visibility to recruiters. Users get a dashboard to track all activity.
+
+---
+
+## GDPR Explainer (Your Question)
+
+**GDPR** (General Data Protection Regulation) is a European Union law, but its principles apply globally as a best practice when you're storing personal user data. Here's why it matters for us:
+
+| Concern | What It Means for NaukriBoost | How We Handle It |
+|---|---|---|
+| **Storing passwords** | If we store a user's Naukri password and get hacked, their Naukri account is compromised | **We DON'T store passwords.** We use session-capture — user logs in once in a browser, we save the session cookies only |
+| **Personal data** | Resume files contain name, phone, address, education — highly sensitive | Encrypt resumes at rest, auto-delete after upload, let users delete anytime |
+| **Right to deletion** | Users must be able to delete ALL their data from our system | Provide a "Delete My Account" button that wipes everything |
+| **Consent** | Users must explicitly agree to what we do with their data | Clear Terms of Service + Privacy Policy at signup |
+| **Data breach notification** | If hacked, we must inform affected users | Good security practices to prevent this |
+
+> [!TIP]
+> **Our approach eliminates the biggest GDPR risk**: We never store Naukri passwords. The session-capture model means we only hold browser cookies that expire naturally. This is much safer than storing credentials.
+
+---
+
+## Architecture Overview
+
+**Phase 1 (Now)**: Everything runs locally on your machine. Users access the app via `localhost`.
+**Phase 2 (Later)**: Move to cloud hosting — the code is designed to make this a simple migration.
+
+```mermaid
+flowchart TB
+    subgraph "Frontend - React + Vite"
+        LP["🏠 Landing Page"]
+        AUTH["🔐 Signup / Login"]
+        DASH["📊 User Dashboard"]
+        ACT["📋 Activity Log"]
+        SET["⚙️ Settings"]
+    end
+
+    subgraph "Backend - Express.js API"
+        UAPI["User Routes"]
+        JAPI["Job Routes"]
+        FAPI["File Upload Routes"]
+        SAPI["Session Capture Routes"]
+        CRON["node-cron Scheduler"]
+    end
+
+    subgraph "Database - SQLite"
+        USERS["Users Table"]
+        SESSIONS["Naukri Sessions Table"]
+        RUNS["Run History Table"]
+        RESUMES["Resume Metadata Table"]
+    end
+
+    subgraph "Automation Engine - Existing Code"
+        PW["Playwright + Stealth"]
+        NP["NaukriPage.js"]
+        HL["Headline Generator"]
+        RS["Resume Stamper"]
+    end
+
+    subgraph "Storage"
+        FS["📁 ./uploads/ (Resumes)"]
+    end
+
+    LP --> AUTH
+    AUTH --> UAPI
+    DASH --> JAPI
+    DASH --> ACT
+    SET --> SAPI
+
+    UAPI --> USERS
+    SAPI --> SESSIONS
+    JAPI --> RUNS
+    FAPI --> FS
+    FAPI --> RESUMES
+
+    CRON -->|"Scheduled triggers"| PW
+    JAPI -->|"Manual trigger"| PW
+    PW --> NP
+    NP --> HL
+    NP --> RS
+    RS --> FS
+    PW -->|"Results"| RUNS
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Cost | Why |
+|---|---|---|---|
+| Frontend | **Vite + React** | Free | Modern, fast, component-based — scales to SaaS UI easily |
+| Backend | **Express.js** | Free | Already in Node ecosystem, same language as automation |
+| Database | **SQLite** (`better-sqlite3`) | Free | Zero-config, file-based. Swap to PostgreSQL later for cloud |
+| Auth (our app) | **JWT tokens** + `bcrypt` | Free | Users sign up to OUR app with their own password |
+| Auth (Naukri) | **Session capture** (browser cookies) | Free | User logs into Naukri once, we save cookies — no password stored |
+| Scheduler | **node-cron** | Free | In-process cron, replaces GitHub Actions |
+| AI Headlines | **Gemini API** (free tier) | Free | 15 RPM free tier is enough for daily updates |
+| File Storage | **Local disk** (`./uploads/`) | Free | Move to S3/Supabase Storage later |
+| Automation | **Existing Playwright + Stealth** | Free | Battle-tested, no changes needed |
+
+---
+
+## Database Schema
+
+```sql
+-- Users of OUR webapp (not Naukri credentials)
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,        -- Their email for OUR app login
+    password_hash TEXT NOT NULL,        -- Hashed password for OUR app
+    role TEXT DEFAULT 'user',           -- 'user' or 'admin'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Their Naukri connection (session cookies, NOT password)
+CREATE TABLE naukri_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    session_data TEXT NOT NULL,         -- JSON blob of browser cookies (encrypted)
+    captured_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME,               -- Auto-expire after 7 days
+    is_valid BOOLEAN DEFAULT 1
+);
+
+-- Their uploaded resume
+CREATE TABLE resumes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    original_filename TEXT NOT NULL,
+    stored_path TEXT NOT NULL,          -- Path on disk: ./uploads/{userId}/{filename}
+    job_role TEXT,                      -- e.g., "SDET", "Marketing Analyst"
+    proof_points TEXT,                  -- Keywords for headline gen
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- History of every automation run
+CREATE TABLE run_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,               -- 'success', 'failed', 'session_expired'
+    headline_used TEXT,                 -- The AI headline that was set
+    resume_uploaded BOOLEAN DEFAULT 0,
+    error_message TEXT,
+    screenshot_path TEXT,               -- Screenshot on failure
+    started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME,
+    duration_seconds INTEGER
+);
+
+-- User's schedule preferences
+CREATE TABLE schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    is_active BOOLEAN DEFAULT 1,
+    cron_expression TEXT DEFAULT '30 3 * * 1-5',  -- Default: 9 AM IST weekdays
+    last_run_at DATETIME,
+    next_run_at DATETIME
+);
+```
+
+---
+
+## Frontend Pages
+
+### 1. 🏠 Landing Page
+- Hero section explaining the product: "Keep your Naukri profile fresh. Automatically."
+- How it works (3 steps): Sign up → Connect Naukri → Upload Resume → Relax
+- CTA: "Get Started Free"
+
+### 2. 🔐 Signup / Login
+- Standard email + password registration (for OUR app)
+- JWT-based session management
+
+### 3. 📊 User Dashboard
+- **Profile Status Card**: Connected/Disconnected, last boost time, next scheduled boost
+- **Quick Actions**: "Boost Now" button, "Update Resume", "Reconnect Naukri"
+- **Stats**: Total boosts this month, success rate, streak count
+- **Current Headline Preview**: Shows the last AI-generated headline
+
+### 4. 📋 Activity Log
+- Table/timeline of all automation runs
+- Columns: Date, Headline Used, Resume Uploaded (Y/N), Status, Duration
+- Filter by date range, status
+- Click to expand: see full logs, error details, failure screenshots
+
+### 5. ⚙️ Settings
+- **Naukri Connection**: "Connect Naukri Account" button → opens a browser window for manual login → captures session
+- **Resume Management**: Upload/replace resume, set job role and proof points
+- **Schedule**: Toggle on/off, pick time slots
+- **Account**: Change password, delete account (wipes all data)
+
+---
+
+## Backend API Endpoints
+
+| Method | Route | Description |
+|---|---|---|
+| `POST` | `/api/auth/signup` | Register new user |
+| `POST` | `/api/auth/login` | Login, returns JWT |
+| `GET` | `/api/auth/me` | Get current user profile |
+| `POST` | `/api/naukri/connect` | Launches browser for Naukri login, captures session |
+| `GET` | `/api/naukri/status` | Check if Naukri session is still valid |
+| `POST` | `/api/resume/upload` | Upload resume file (multipart) |
+| `GET` | `/api/resume` | Get current resume info |
+| `DELETE` | `/api/resume` | Delete stored resume |
+| `POST` | `/api/boost/trigger` | Manually trigger a profile boost |
+| `GET` | `/api/boost/history` | Get run history (paginated) |
+| `GET` | `/api/boost/stats` | Get stats (total runs, success rate, etc.) |
+| `PUT` | `/api/schedule` | Update schedule preferences |
+| `GET` | `/api/schedule` | Get current schedule |
+| `DELETE` | `/api/account` | Delete account + all data |
+
+---
+
+## Session Capture Flow (Critical Path)
+
+This is how we connect a user's Naukri account without storing their password:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Browser as Stealth Browser
+
+    User->>Frontend: Clicks "Connect Naukri"
+    Frontend->>Backend: POST /api/naukri/connect
+    Backend->>Browser: Launch headed Playwright (stealth)
+    Browser->>Browser: Navigate to naukri.com/nlogin/login
+    Note over Browser: User sees real Naukri login page
+    User->>Browser: Enters email + password manually
+    Browser->>Browser: Naukri authenticates
+    Browser->>Backend: Capture storageState (cookies)
+    Backend->>Backend: Encrypt & save to naukri_sessions
+    Backend->>Frontend: { status: "connected" }
+    Frontend->>User: "✅ Naukri Connected!"
+```
+
+> [!NOTE]
+> On the local machine, this opens a real browser window. When we move to cloud, this becomes a remote browser session (via noVNC or a similar approach) streamed to the user's browser — that's a Phase 2 concern.
+
+---
+
+## What Changes in Existing Code
+
+| File | Change | Effort |
+|---|---|---|
+| `pages/NaukriPage.js` | Refactor to accept a config object `{ sessionPath, resumePath, headline }` instead of reading `process.env` directly | Small |
+| `utils/headline-gen.js` | Re-enable Gemini API call, accept `role` + `proofPoints` as parameters | Small |
+| `utils/fileHelper.js` | Update `createStampedResume` to work with `./uploads/{userId}/` paths | Small |
+| `utils/stealth.js` | No changes | None |
+| `utils/helpers.js` | No changes | None |
+| `tests/auth.setup.js` | Extract session-capture logic into a reusable function for the API | Small |
+| `tests/profileUpdate.spec.js` | Core logic moves into a `services/boostService.js` that the API calls | Medium |
+
+---
+
+## Project Structure (New)
+
+```
+NaukriBoost/
+├── client/                          # Frontend (Vite + React)
+│   ├── index.html
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   ├── index.css                # Design system
+│   │   ├── pages/
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Signup.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── ActivityLog.jsx
+│   │   │   └── Settings.jsx
+│   │   └── components/
+│   │       ├── Navbar.jsx
+│   │       ├── StatusCard.jsx
+│   │       ├── RunHistoryTable.jsx
+│   │       ├── ResumeUpload.jsx
+│   │       └── ScheduleToggle.jsx
+│   └── vite.config.js
+│
+├── server/                          # Backend (Express.js)
+│   ├── index.js                     # App entry point
+│   ├── routes/
+│   │   ├── auth.js
+│   │   ├── naukri.js
+│   │   ├── resume.js
+│   │   ├── boost.js
+│   │   └── schedule.js
+│   ├── services/
+│   │   ├── boostService.js          # Core automation orchestrator
+│   │   ├── sessionService.js        # Naukri session capture + validation
+│   │   └── headlineService.js       # AI headline generation
+│   ├── middleware/
+│   │   └── auth.js                  # JWT verification
+│   ├── db/
+│   │   ├── schema.sql
+│   │   └── database.js              # SQLite connection + helpers
+│   └── scheduler/
+│       └── cron.js                  # node-cron job runner
+│
+├── engine/                          # Existing automation (minimal changes)
+│   ├── NaukriPage.js                # Refactored from pages/
+│   ├── stealth.js                   # As-is from utils/
+│   ├── helpers.js                   # As-is from utils/
+│   └── fileHelper.js                # Updated paths from utils/
+│
+├── uploads/                         # User resume files (gitignored)
+│   └── {userId}/
+│       └── resume.docx
+│
+├── data/                            # SQLite database file (gitignored)
+│   └── naukriboost.db
+│
+├── package.json
+└── .env
+```
+
+---
+
+## Phased Rollout
+
+### Phase 1 — Local MVP (What We Build Now)
+- [x] Full backend API with SQLite
+- [x] Frontend dashboard (React + Vite)
+- [x] Session capture via local headed browser
+- [x] Resume upload + storage
+- [x] Manual "Boost Now" button
+- [x] Scheduled automation via node-cron
+- [x] Activity log with run history
+- [x] AI headline generation (Gemini free tier)
+
+### Phase 2 — Cloud Migration (Later)
+- [ ] Deploy backend to Railway/Render
+- [ ] Swap SQLite → PostgreSQL (Supabase free tier)
+- [ ] Swap local disk → Supabase Storage for resumes
+- [ ] Remote browser session for Naukri login (noVNC)
+- [ ] Rotating proxies for multi-user IP isolation
+- [ ] Email notifications (Resend free tier)
+- [ ] Stripe integration for premium tier
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Backend API tests using `supertest`
+- Run the existing Playwright automation through `boostService.js` to ensure refactoring didn't break anything
+
+### Manual Verification
+- Sign up → Login → Connect Naukri → Upload Resume → Trigger Boost → Verify on naukri.com
+- Check Activity Log shows the run
+- Test session expiry + reconnect flow
+- Test "Delete Account" wipes all data
