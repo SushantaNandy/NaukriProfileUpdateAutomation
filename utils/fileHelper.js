@@ -7,18 +7,22 @@ const path = require('path');
  * @returns {string} - The path to the newly renamed resume
  */
 function getFreshResumePath(dataDirPath) {
-  // Find the existing resume file
+  // Find the existing resume file - supports .pdf and .docx formats
   const files = fs.readdirSync(dataDirPath);
-  const existingResume = files.find(f => f.toLowerCase().includes('resume') && f.endsWith('.pdf'));
+  const existingResume = files.find(
+    f => f.toLowerCase().includes('resume') && (f.endsWith('.pdf') || f.endsWith('.docx'))
+  );
   
   if (!existingResume) {
-    throw new Error(`No resume file found in ${dataDirPath} containing 'resume' and ending with '.pdf'`);
+    throw new Error(`No resume file found in ${dataDirPath} containing 'resume' and ending with '.pdf' or '.docx'`);
   }
 
   const currentResumePath = path.join(dataDirPath, existingResume);
-  const ext = '.pdf';
+  const parsed = path.parse(existingResume);
+  const baseName = parsed.name;
+  const ext = parsed.ext;
   
-  // Create a fresh name based on current IST date and time e.g. SDETSushantaResume_23_04_14_30_45.pdf
+  // Create a fresh name based on current IST date and time e.g. Sushanta_Nandy_Resume_23_04_14_30_45.docx
   const date = new Date();
   const formatter = new Intl.DateTimeFormat('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -39,7 +43,6 @@ function getFreshResumePath(dataDirPath) {
   const minutes = getPart('minute');
   const seconds = getPart('second');
   
-  const baseName = 'SDETSushantaResume';
   const newName = `${baseName}_${day}_${month}_${hours}_${minutes}_${seconds}${ext}`;
   const newPath = path.join(dataDirPath, newName);
 
